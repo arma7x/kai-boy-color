@@ -16,7 +16,7 @@ window.addEventListener("load", function() {
       'SoftRight': 'start',
       'SoftLeft': 'select',
       '9': 'a',
-      '8': 'b'
+      '#': 'b'
     };
   
     function saveToSlot(slotNum) {
@@ -26,14 +26,13 @@ window.addEventListener("load", function() {
         var gameName = gameboy.name;
         var slotName = 'KaiBoySaveSlot' + slotNum + '_' + gameName;
         var slotObject = gameboy.saveState();
-        var slotBlob = new Blob([JSON.stringify(slotObject)], {type: 'application/json'});
         localforage.getItem(slotName)
         .then((blob) => {
           if (blob) {
             run();
             $router.hideLoading();
           } else {
-            localforage.setItem(slotName, slotBlob)
+            localforage.setItem(slotName, slotObject)
             .then(() => {
               run();
               $router.showToast('Saved');
@@ -50,11 +49,67 @@ window.addEventListener("load", function() {
     
     function loadFromSlot(slotNum, canvas) {
       if(GameBoyEmulatorInitialized()) {
+        $router.showLoading();
         pause();
-        let gameName = gameboy.name;
-        let slotName = 'KaiBoySaveSlot' + slotNum + '_' + gameName;
-        run();
+        var gameName = gameboy.name;
+        var slotName = 'KaiBoySaveSlot' + slotNum + '_' + gameName;
+        localforage.getItem(slotName)
+        .then((slotObject) => {
+          if (slotObject) {
+            gameboy = new GameBoyCore(canvas, "");
+            gameboy.savedStateFileName = slotName;
+            gameboy.returnFromState(slotObject);
+            run();
+            $router.hideLoading();
+          } else {
+            run();
+            $router.hideLoading();
+          }
+        })
+        .catch(() => {
+          run();
+          $router.hideLoading();
+        });
       }
+    }
+
+    function showSavedSlot() {
+      var gameName = gameboy.name;
+      var slots = [];
+      var bufs = [];
+      var slotName1 = 'KaiBoySaveSlot' + '1' + '_' + gameName;
+      var slotName2 = 'KaiBoySaveSlot' + '4' + '_' + gameName;
+      var slotName3 = 'KaiBoySaveSlot' + '7' + '_' + gameName;
+      var slotName4 = 'KaiBoySaveSlot' + '*' + '_' + gameName;
+      localforage.getItem(slotName1)
+      .then((blob1) => {
+        if (blob1) {
+          slots.push(slotName1);
+          bufs.push(blob1);
+        }
+        return localforage.getItem(slotName2);
+      })
+      .then((blob2) => {
+        if (blob2) {
+          slots.push(slotName2);
+          bufs.push(blob2);
+        }
+        return localforage.getItem(slotName3);
+      })
+      .then((blob3) => {
+        if (blob3) {
+          slots.push(slotName3);
+          bufs.push(blob3);
+        }
+        return localforage.getItem(slotName4);
+      })
+      .then((blob4) => {
+        if (blob4) {
+          slots.push(slotName4);
+          bufs.push(blob4);
+        }
+        console.log(slots, bufs);
+      });
     }
 
     function runGB(romBuffer) {
@@ -66,10 +121,23 @@ window.addEventListener("load", function() {
             GameBoyKeyDown(mapping[e.key])
           } else if (e.key === '1') {
             saveToSlot('1');
-            // console.log(JSON.stringify(gameboy.saveState()).length);
+          } else if (e.key === '2') {
+            loadFromSlot('1', mainCanvas);
+          } else if (e.key === '4') {
+            saveToSlot('4');
+          } else if (e.key === '5') {
+            loadFromSlot('4', mainCanvas);
+          } else if (e.key === '7') {
+            saveToSlot('7');
+          } else if (e.key === '8') {
+            loadFromSlot('7', mainCanvas);
+          } else if (e.key === 'Call') {
+            showSavedSlot();
           }
         }
         window.onkeyup = function(e) {
+          if (KaiBoyMachinePaused)
+            return;
           if(e.key in mapping) {
             GameBoyKeyUp(mapping[e.key])
           }
@@ -98,7 +166,7 @@ window.addEventListener("load", function() {
             var responseView = new Uint8ClampedArray(reader.result);
             var l = responseView.length;
             var s = '';
-            for(let i=0;i<l;i++) {
+            for(var i=0;i<l;i++) {
               s += String.fromCharCode(responseView[i])
             }
             runGB(s);
@@ -142,8 +210,10 @@ window.addEventListener("load", function() {
           this.$router.showDialog('Exit', 'Are you sure to exit ?', null, 'Yes', () => {
             this.$router.pop();
           }, 'No', () => {
-            KaiBoyMachinePaused = !KaiBoyMachinePaused;
-            run();
+            setTimeout(() => {
+              run();
+              KaiBoyMachinePaused = !KaiBoyMachinePaused;
+            }, 500);
             this.$router.setSoftKeyCenterText('PAUSE');
           }, ' ', null, () => {
             // closecb
