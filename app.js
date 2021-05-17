@@ -297,13 +297,13 @@ window.addEventListener("load", function() {
           },
         },
         backKeyListener: function() {
-          KaiBoyMachinePaused = !KaiBoyMachinePaused;
+          KaiBoyMachinePaused = true;
           if (KaiBoyMachinePaused) {
             pause();
           }
           this.$router.showDialog('Exit', 'Are you sure to exit ?', null, 'Yes', () => {
             pause();
-            KaiBoyMachinePaused = false;
+            KaiBoyMachinePaused = true;
             this.$router.pop();
           }, 'No', () => {
             setTimeout(() => {
@@ -311,8 +311,15 @@ window.addEventListener("load", function() {
               KaiBoyMachinePaused = false;
             }, 500);
           }, ' ', null, () => {
-            KaiBoyMachinePaused = false;
-            run();
+            setTimeout(() => {
+              var cur = this.$router.stack[this.$router.stack.length -1];
+              if (cur) {
+                if (cur.name === 'vplayer') {
+                  KaiBoyMachinePaused = false;
+                  run();
+                }
+              }
+            }, 500);
           });
           return true;
         }
