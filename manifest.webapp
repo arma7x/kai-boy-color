@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "name": "K-Boy Color",
-  "description": "JS framework for KaiOS",
+  "description": "K-Boy Color a full-featured and super-fast emulator to run Game Boy Color games on the broadest range of KaiOS devices.",
   "launch_path": "/index.html",
   "theme": "#873eff",
   "theme_color": "#873eff",
@@ -30,8 +30,8 @@
   "locales": {
     "en-US": {
       "name": "K-Boy Color",
-      "subtitle": "JS framework for KaiOS",
-      "description": "JS framework for KaiOS"
+      "subtitle": "K-Boy Color a full-featured and super-fast emulator to run Game Boy Color games on the broadest range of KaiOS devices.",
+      "description": "K-Boy Color a full-featured and super-fast emulator to run Game Boy Color games on the broadest range of KaiOS devices. NO GAMES ARE INCLUDED IN THE APP!"
     }
   },
   "default_locale": "en-US"
