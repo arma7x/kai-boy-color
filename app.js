@@ -342,6 +342,9 @@ window.addEventListener("load", function() {
       .then((roms) => {
         if (!roms) {
           window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
+          setTimeout(() => {
+            this.$router.showToast('Please `Kill App` if you think the app was hang');
+          }, 30000);
         } else {
           this.setData({roms: roms});
         }
@@ -361,7 +364,7 @@ window.addEventListener("load", function() {
         if (status) {
           this.$router.hideLoading();
         } else {
-          this.$router.showLoading();
+          this.$router.showLoading(false);
         }
       },
       runFilter: function(fileRegistry) {
