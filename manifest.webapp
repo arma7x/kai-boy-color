@@ -26,7 +26,8 @@
     "device-storage:sdcard":{ 
       "access": "readwrite",
       "description": "ROM picking and savestates"
-    }
+    },
+    "volumemanager": {}
   },
   "locales": {
     "en-US": {
