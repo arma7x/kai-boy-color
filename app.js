@@ -302,6 +302,8 @@ window.addEventListener("load", function() {
             pause();
           }
           this.$router.showDialog('Exit', 'Are you sure to exit ?', null, 'Yes', () => {
+            pause();
+            KaiBoyMachinePaused = false;
             this.$router.pop();
           }, 'No', () => {
             setTimeout(() => {
