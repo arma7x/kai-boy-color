@@ -4,7 +4,27 @@ window.addEventListener("load", function() {
 
   const state = new KaiState({});
 
-  const loadRom = function($router, rom) {
+  const helpSupportPage = new Kai({
+    name: 'helpSupportPage',
+    data: {
+      title: 'helpSupportPage'
+    },
+    templateUrl: document.location.origin + '/templates/helpnsupport.html',
+    mounted: function() {
+      this.$router.setHeaderTitle('Help & Support');
+      navigator.spatialNavigationEnabled = false;
+    },
+    unmounted: function() {},
+    methods: {},
+    softKeyText: { left: '', center: '', right: '' },
+    softKeyListener: {
+      left: function() {},
+      center: function() {},
+      right: function() {}
+    }
+  });
+
+  const loadRom = function($router, rom, soundOn = true) {
 
     var KaiBoyMachinePaused = true;
     var mainCanvas;
@@ -22,114 +42,29 @@ window.addEventListener("load", function() {
   
     function saveToSlot(slotNum) {
       if(GameBoyEmulatorInitialized()) {
-        $router.showLoading();
         pause();
         var gameName = gameboy.name;
-        var slotName = 'KaiBoySaveSlot' + slotNum + '_' + gameName;
+        var slotName = 'KBCSaveSlot_' + slotNum + '_' + gameName;
         var slotObject = gameboy.saveState();
-        localforage.getItem(slotName)
-        .then((blob) => {
-          $router.hideLoading();
-          if (blob) {
-            console.log('Overwrite', slotName);
-            KaiBoyMachinePaused = true;
-            if (KaiBoyMachinePaused) {
-              pause();
-            }
-            $router.showDialog('Overwrite', `Are you sure to overwrite ${slotName} ?`, null, 'Yes', () => {
-              $router.showLoading();
-
-              const DS = new DataStorage();
-              var slotBlob = new Blob([JSON.stringify(slotObject)], {type: 'application/json'})
-              DS.addFile(['kbc'], slotName, slotBlob)
-              .then((res) => {
-                console.log(res.name);
-                localforage.setItem(slotName, res.name)
-                .then(() => {
-                  $router.hideLoading();
-                  $router.showToast('Saved');
-                  setTimeout(() => {
-                    run();
-                    KaiBoyMachinePaused = false;
-                  }, 500);
-                });
-              })
-              .catch((err) => {
-                $router.hideLoading();
-                $router.showToast('Error');
-                setTimeout(() => {
-                  run();
-                  KaiBoyMachinePaused = false;
-                }, 500);
-              });
-
-              
-            }, 'No', () => {
-              setTimeout(() => {
-                run();
-                KaiBoyMachinePaused = false;
-              }, 500);
-              $router.hideLoading();
-              $router.setSoftKeyCenterText('PAUSE');
-            }, ' ', null, () => {
-              setTimeout(() => {
-                run();
-                KaiBoyMachinePaused = false;
-              }, 500);
-              $router.setSoftKeyCenterText('PAUSE');
-            });
-          } else {
-            $router.showLoading();
-            const DS = new DataStorage();
-            var slotBlob = new Blob([JSON.stringify(slotObject)], {type: 'application/json'})
-            DS.addFile(['kbc'], slotName, slotBlob)
-            .then((res) => {
-              console.log(res.name);
-              localforage.setItem(slotName, res.name)
-              .then(() => {
-                $router.hideLoading();
-                $router.showToast('Saved');
-                setTimeout(() => {
-                  run();
-                  KaiBoyMachinePaused = false;
-                }, 500);
-              });
-            })
-            .catch((err) => {
-              $router.hideLoading();
-              $router.showToast('Error');
-              setTimeout(() => {
-                run();
-                KaiBoyMachinePaused = false;
-              }, 500);
-            });
-          }
-        })
-        .catch(() => {
-          run();
-          $router.hideLoading();
-        });
-      }
-    }
-    
-    function removeFromSlot(slotNum) {
-      var gameName = gameboy.name;
-      var slotName = 'KaiBoySaveSlot' + slotNum + '_' + gameName;
-      localforage.getItem(slotName)
-      .then((buff) => {
-        if (!buff) {
-          $router.showToast('Empty');
-        } else {
+        const DS = new DataStorage();
+        DS.getFile(['kbc', slotName].join('/'), (found) => {
+          console.log('Overwrite', slotName);
           KaiBoyMachinePaused = true;
           if (KaiBoyMachinePaused) {
             pause();
           }
-          $router.showDialog('Overwrite', `Are you sure remove ${slotName} ?`, null, 'Yes', () => {
+          $router.showDialog('Overwrite', `Are you sure to overwrite ${slotName} ?`, null, 'Yes', () => {
             $router.showLoading();
-            localforage.removeItem(slotName)
-            .then(() => {
+            var slotBlob = new Blob([JSON.stringify(slotObject)], {type: 'application/json'})
+            DS.addFile(['kbc'], slotName, slotBlob)
+            .then((res) => {
+              $router.showToast('Saved');
+            })
+            .catch((err) => {
+              $router.showToast('Error');
+            })
+            .finally(() => {
               $router.hideLoading();
-              $router.showToast('Removed');
               setTimeout(() => {
                 run();
                 KaiBoyMachinePaused = false;
@@ -149,62 +84,111 @@ window.addEventListener("load", function() {
             }, 500);
             $router.setSoftKeyCenterText('PAUSE');
           });
+        }, (notfound) => {
+          $router.showLoading();
+          const DS = new DataStorage();
+          var slotBlob = new Blob([JSON.stringify(slotObject)], {type: 'application/json'})
+          DS.addFile(['kbc'], slotName, slotBlob)
+          .then((res) => {
+            console.log(res.name);
+            localforage.setItem(slotName, res.name)
+            .then(() => {
+              $router.hideLoading();
+              $router.showToast('Saved');
+              setTimeout(() => {
+                run();
+                KaiBoyMachinePaused = false;
+              }, 500);
+            });
+          })
+          .catch((err) => {
+            $router.hideLoading();
+            $router.showToast('Error');
+            setTimeout(() => {
+              run();
+              KaiBoyMachinePaused = false;
+            }, 500);
+          });
+        });
+      }
+    }
+    
+    function removeFromSlot(slotNum) {
+      var gameName = gameboy.name;
+      var slotName = 'KBCSaveSlot_' + slotNum + '_' + gameName;
+      const DS = new DataStorage();
+      DS.getFile(['kbc', slotName].join('/'), (found) => {
+        KaiBoyMachinePaused = true;
+        if (KaiBoyMachinePaused) {
+          pause();
         }
+        $router.showDialog('Overwrite', `Are you sure remove ${slotName} ?`, null, 'Yes', () => {
+          $router.showLoading();
+          DS.deleteFile(['kbc'], slotName)
+          .then(() => {
+            $router.showToast('Removed');
+          })
+          .finally(() => {
+            $router.hideLoading();
+            setTimeout(() => {
+              run();
+              KaiBoyMachinePaused = false;
+            }, 500);
+          });
+        }, 'No', () => {
+          setTimeout(() => {
+            run();
+            KaiBoyMachinePaused = false;
+          }, 500);
+          $router.hideLoading();
+          $router.setSoftKeyCenterText('PAUSE');
+        }, ' ', null, () => {
+          setTimeout(() => {
+            run();
+            KaiBoyMachinePaused = false;
+          }, 500);
+          $router.setSoftKeyCenterText('PAUSE');
+        });
+      }, (notfound) => {
+        $router.showToast('Empty');
       });
     }
 
     function showSavedSlot() {
       var gameName = gameboy.name;
-      var slots = [];
-      var slotName1 = 'KaiBoySaveSlot' + '1' + '_' + gameName;
-      var slotName2 = 'KaiBoySaveSlot' + '4' + '_' + gameName;
-      var slotName3 = 'KaiBoySaveSlot' + '7' + '_' + gameName;
-      localforage.getItem(slotName1)
-      .then((blob1) => {
-        if (blob1) {
-          slots.push({ 'text': slotName1, 'buff': blob1 });
-        }
-        return localforage.getItem(slotName2);
-      })
-      .then((blob2) => {
-        if (blob2) {
-          slots.push({ 'text': slotName2, 'buff': blob2 });
-        }
-        return localforage.getItem(slotName3);
-      })
-      .then((blob3) => {
-        if (blob3) {
-          slots.push({ 'text': slotName3, 'buff': blob3 });
-        }
-        if (slots.length === 0) {
+      var slotName1 = 'KBCSaveSlot_' + '1' + '_' + gameName;
+      var slotName2 = 'KBCSaveSlot_' + '2' + '_' + gameName;
+      var slotName3 = 'KBCSaveSlot_' + '3' + '_' + gameName;
+      var slots = [
+        { 'text': slotName1, 'path': ['kbc', slotName1].join('/') },
+        { 'text': slotName2, 'path': ['kbc', slotName2].join('/') },
+        { 'text': slotName3, 'path': ['kbc', slotName3].join('/') },
+      ];
+      $router.showOptionMenu('Saved Slot List', slots, 'LOAD', (selected) => {
+        const DS = new DataStorage();
+        DS.getFile(selected.path, (file) => {
+          let reader = new FileReader()
+          reader.onload = (e) => {
+            let slotObject = null
+            try {
+              slotObject = JSON.parse(reader.result);
+            } catch(e) {
+              $router.showToast('Corrupt save data!')
+            }
+            if (slotObject) {
+              gameboy = new GameBoyCore(mainCanvas, "");
+              gameboy.savedStateFileName = selected.text;
+              gameboy.returnFromState(slotObject);
+              run();
+              $router.showToast('Loaded');
+            }
+            else run();
+          }
+          reader.readAsBinaryString(file);
+        }, (err) => {
           $router.showToast('Empty');
-          return;
-        } else {
-          $router.showOptionMenu('Saved Slot List', slots, 'LOAD', (selected) => {
-            const DS = new DataStorage();
-            DS.getFile(selected.buff, (file) => {
-              let reader = new FileReader()
-              reader.onload = (e) => {
-                let slotObject = null
-                try {
-                  slotObject = JSON.parse(reader.result);
-                } catch(e) {
-                  $router.showToast('Corrupt save data!')
-                }
-                if (slotObject) {
-                  gameboy = new GameBoyCore(mainCanvas, "");
-                  gameboy.savedStateFileName = selected.text;
-                  gameboy.returnFromState(slotObject);
-                  run();
-                  $router.showToast('Loaded');
-                }
-                else run();
-              }
-              reader.readAsBinaryString(file);
-            });
-          }, () => {});
-        }
-      });
+        });
+      }, () => {});
     }
 
     function runGB(romBuffer) {
@@ -253,7 +237,6 @@ window.addEventListener("load", function() {
             GameBoyKeyUp(mapping[e.key])
           }
         }
-        var soundOn = true;
         start(mainCanvas, romBuffer, soundOn);
         KaiBoyMachinePaused = false
         console.log('ROM loaded:', gameboy.name)
@@ -323,13 +306,11 @@ window.addEventListener("load", function() {
           }, 'No', () => {
             setTimeout(() => {
               run();
-              KaiBoyMachinePaused = !KaiBoyMachinePaused;
+              KaiBoyMachinePaused = false;
             }, 500);
-            this.$router.setSoftKeyCenterText('PAUSE');
           }, ' ', null, () => {
             KaiBoyMachinePaused = false;
             run();
-            $router.setSoftKeyCenterText('PAUSE');
           });
           return true;
         }
@@ -348,10 +329,19 @@ window.addEventListener("load", function() {
     mounted: function() {
       navigator.spatialNavigationEnabled = false;
       this.$router.setHeaderTitle('Load ROM');
-      window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
+      localforage.getItem('KBC_ROMS')
+      .then((roms) => {
+        if (!roms) {
+          window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
+        } else {
+          this.setData({roms: roms});
+        }
+      });
     },
     unmounted: function() {
-      window['__DS__'].destroy();
+      if (window['__DS__']) {
+        window['__DS__'].destroy();
+      }
     },
     methods: {
       selected: function() {},
@@ -378,16 +368,38 @@ window.addEventListener("load", function() {
           }
         });
         this.setData({roms: roms});
+        localforage.setItem('KBC_ROMS', roms);
       }
     },
-    softKeyText: { left: 'Help', center: 'SELECT', right: 'Kill App' },
+    softKeyText: { left: 'Menu', center: 'SELECT', right: 'Kill App' },
     softKeyListener: {
-      left: function() {},
+      left: function() {
+        var menu = [
+          {'text': 'Reload Library'},
+          {'text': 'Help & Support'},
+        ]
+        this.$router.showOptionMenu('Menu', menu, 'SELECT', (selected) => {
+          if (selected.text === 'Reload Library') {
+            window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
+          } else if (selected.text === 'Help & Support') {
+            this.$router.push('helpSupportPage');
+          }
+        }, null);
+      },
       center: function() {
         var rom = this.data.roms[this.verticalNavIndex];
         if (rom) {
-          window['__DS__'].getFile(rom.path, (success) => {
-            loadRom(this.$router, success);
+          var DS;
+          if (window['__DS__'])
+            DS = window['__DS__'];
+          else
+            DS = new DataStorage();
+          DS.getFile(rom.path, (success) => {
+            this.$router.showDialog('Info', 'Enable sound ?', null, 'Yes', () => {
+              loadRom(this.$router, success, true);
+            }, 'No', () => {
+              loadRom(this.$router, success, false);
+            }, 'CANCEL', () => {}, null);
           }, (err) => {
             this.$router.showToast(err.toString());
           })
@@ -411,9 +423,7 @@ window.addEventListener("load", function() {
         //this.navigateTabNav(1);
       },
     },
-    backKeyListener: function() {
-      this.components = [];
-    }
+    backKeyListener: function() {}
   });
 
   const router = new KaiRouter({
@@ -422,6 +432,10 @@ window.addEventListener("load", function() {
       'index' : {
         name: 'romsPage',
         component: romsPage
+      },
+      'helpSupportPage': {
+        name: 'helpSupportPage',
+        component: helpSupportPage
       },
     }
   });
@@ -438,10 +452,47 @@ window.addEventListener("load", function() {
 
   try {
     app.mount('app');
-    //setTimeout(function() {
-      //secondChild.mount('app');
-    //}, 2000);
   } catch(e) {
     console.log(e);
   }
+
+  
+
+  function displayKaiAds() {
+    var display = true;
+    if (window['kaiadstimer'] == null) {
+      window['kaiadstimer'] = new Date();
+    } else {
+      var now = new Date();
+      if ((now - window['kaiadstimer']) < 300000) {
+        display = false;
+      } else {
+        window['kaiadstimer'] = now;
+      }
+    }
+    console.log('Display Ads:', display);
+    if (!display)
+      return;
+    getKaiAd({
+      publisher: 'ac3140f7-08d6-46d9-aa6f-d861720fba66',
+      app: 'k-music',
+      slot: 'kaios',
+      onerror: err => console.error(err),
+      onready: ad => {
+        ad.call('display')
+        setTimeout(() => {
+          document.body.style.position = '';
+        }, 1000);
+      }
+    })
+  }
+
+  displayKaiAds();
+
+  document.addEventListener('visibilitychange', function(ev) {
+    if (document.visibilityState === 'visible') {
+      displayKaiAds();
+    }
+  });
+
 });

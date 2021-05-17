@@ -11,19 +11,17 @@
   ],
   "orientation": ["portrait", "portrait-primary"],
   "icons": {
-    "16": "/icons/icon16x16.png",
-    "48": "/icons/icon48x48.png",
-    "60": "/icons/icon60x60.png",
-    "128": "/icons/icon128x128.png"
+    "56": "/icons/icon56x56.png",
+    "112": "/icons/icon112x112.png"
   },
   "developer": {
     "name": "arma7x",
     "url": "https://github.com/arma7x"
   },
   "origin": "app://kaiboy.arma7x.com",
-  "type": "certified",
+  "type": "privileged",
   "permissions": {
-    "device-storage:sdcard":{ 
+    "device-storage:sdcard":{
       "access": "readwrite",
       "description": "ROM picking and savestates"
     },
