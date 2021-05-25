@@ -374,7 +374,7 @@ window.addEventListener("load", function() {
           var n1 = n[n.length - 1];
           var n2 = n1.split('.');
           if (n2.length > 1) {
-            if (n2[n2.length - 1] === 'gbc') {
+            if (n2[n2.length - 1] === 'gbc' || n2[n2.length - 1] === 'gb') {
               roms.push({'name': n1, 'path': file});
             }
           }
