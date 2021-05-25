@@ -468,36 +468,7 @@ window.addEventListener("load", function() {
     console.log(e);
   }
 
-  
-
-  function displayKaiAds() {
-    var display = true;
-    if (window['kaiadstimer'] == null) {
-      window['kaiadstimer'] = new Date();
-    } else {
-      var now = new Date();
-      if ((now - window['kaiadstimer']) < 300000) {
-        display = false;
-      } else {
-        window['kaiadstimer'] = now;
-      }
-    }
-    console.log('Display Ads:', display);
-    if (!display)
-      return;
-    getKaiAd({
-      publisher: 'ac3140f7-08d6-46d9-aa6f-d861720fba66',
-      app: 'k-music',
-      slot: 'kaios',
-      onerror: err => console.error(err),
-      onready: ad => {
-        ad.call('display')
-        setTimeout(() => {
-          document.body.style.position = '';
-        }, 1000);
-      }
-    })
-  }
+  function displayKaiAds() {}
 
   displayKaiAds();
 
