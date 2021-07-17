@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "K-Boy Color",
   "description": "K-Boy Color a full-featured and super-fast emulator to run Game Boy Color games on the broadest range of KaiOS devices.",
   "launch_path": "/index.html",
