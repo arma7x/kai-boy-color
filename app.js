@@ -379,14 +379,33 @@ window.addEventListener("load", function() {
             }
           }
         });
+        roms.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
         this.setData({roms: roms});
         localforage.setItem('KBC_ROMS', roms);
+      },
+      search: function(keyword) {
+        this.verticalNavIndex = -1;
+        localforage.getItem('KBC_ROMS')
+        .then((roms) => {
+          if (!roms) {
+            roms = [];
+          }
+          var result = [];
+          roms.forEach((rom) => {
+            if (keyword === '' || (rom.name.toLowerCase().indexOf(keyword.toLowerCase()) > -1)) {
+              result.push(rom);
+            }
+          });
+          result.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+          this.setData({roms: result});
+        });
       }
     },
     softKeyText: { left: 'Menu', center: 'SELECT', right: 'Kill App' },
     softKeyListener: {
       left: function() {
         var menu = [
+          {'text': 'Search'},
           {'text': 'Reload Library'},
           {'text': 'Help & Support'},
         ]
@@ -395,6 +414,57 @@ window.addEventListener("load", function() {
             window['__DS__'] = new DataStorage(this.methods.onChange, this.methods.onReady);
           } else if (selected.text === 'Help & Support') {
             this.$router.push('helpSupportPage');
+          } else if (selected.text === 'Search') {
+            const searchDialog = Kai.createDialog('Search', '<div><input id="search-input" placeholder="Enter your keyword" class="kui-input" type="text" /></div>', null, '', undefined, '', undefined, '', undefined, undefined, this.$router);
+            searchDialog.mounted = () => {
+              setTimeout(() => {
+                setTimeout(() => {
+                  this.$router.setSoftKeyText('Cancel' , '', 'Go');
+                }, 103);
+                const SEARCH_INPUT = document.getElementById('search-input');
+                if (!SEARCH_INPUT) {
+                  return;
+                }
+                SEARCH_INPUT.focus();
+                SEARCH_INPUT.addEventListener('keydown', (evt) => {
+                  switch (evt.key) {
+                    case 'Backspace':
+                    case 'EndCall':
+                      if (document.activeElement.value.length === 0) {
+                        this.$router.hideBottomSheet();
+                        setTimeout(() => {
+                          SEARCH_INPUT.blur();
+                        }, 100);
+                      }
+                      break
+                    case 'SoftRight':
+                      this.$router.hideBottomSheet();
+                      setTimeout(() => {
+                        SEARCH_INPUT.blur();
+                        this.methods.search(SEARCH_INPUT.value);
+                      }, 100);
+                      break
+                    case 'SoftLeft':
+                      this.$router.hideBottomSheet();
+                      setTimeout(() => {
+                        SEARCH_INPUT.blur();
+                      }, 100);
+                      break
+                  }
+                });
+              });
+            }
+            searchDialog.dPadNavListener = {
+              arrowUp: function() {
+                const SEARCH_INPUT = document.getElementById('search-input');
+                SEARCH_INPUT.focus();
+              },
+              arrowDown: function() {
+                const SEARCH_INPUT = document.getElementById('search-input');
+                SEARCH_INPUT.focus();
+              }
+            }
+            this.$router.showBottomSheet(searchDialog);
           }
         }, null);
       },
